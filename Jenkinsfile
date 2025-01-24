@@ -13,33 +13,29 @@ pipeline {
             }
         }
         
-        stage('Test') {
+        stage('Build and Test') {
             steps {
                 script {
-                    try {
-                        sh '''
-                            python3 -m pip install --upgrade pip
-                            pip3 install -r requirements.txt
-                            pip3 install pytest pytest-cov
-                            python3 -m pytest tests/
-                        '''
-                    } catch (Exception e) {
-                        echo "Tests failed but continuing deployment"
-                    }
+                    // Build the Docker image
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                    
+                    // Run tests inside a temporary container
+                    sh """
+                        docker run --rm \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                        /bin/bash -c 'pip install pytest pytest-cov && pytest tests/'
+                    """
                 }
             }
         }
         
-        stage('Build and Deploy') {
+        stage('Deploy') {
             steps {
                 script {
-                    // Build new image
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                    
-                    // Stop and remove existing container
+                    // Stop and remove existing container if it exists
                     sh '''
-                        docker ps -q --filter "name=fastapi-app" | grep -q . && docker stop fastapi-app || true
-                        docker ps -aq --filter "name=fastapi-app" | grep -q . && docker rm fastapi-app || true
+                        docker ps -q --filter "name=fastapi-app" | xargs -r docker stop
+                        docker ps -aq --filter "name=fastapi-app" | xargs -r docker rm
                     '''
                     
                     // Run new container
