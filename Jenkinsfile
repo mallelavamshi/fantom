@@ -23,7 +23,7 @@ pipeline {
                     sh """
                         docker run --rm \
                         ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                        /bin/bash -c 'pip install pytest pytest-cov && pytest tests/'
+                        /bin/bash -c 'python -m pip install pytest pytest-cov && python -m pytest tests/'
                     """
                 }
             }
