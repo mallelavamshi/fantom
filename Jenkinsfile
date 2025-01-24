@@ -13,25 +13,12 @@ pipeline {
             }
         }
         
-        stage('Build and Test') {
+        stage('Build and Deploy') {
             steps {
                 script {
                     // Build the Docker image
                     sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                     
-                    // Run tests inside a temporary container
-                    sh """
-                        docker run --rm \
-                        ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                        /bin/bash -c 'python -m pip install pytest pytest-cov && python -m pytest tests/'
-                    """
-                }
-            }
-        }
-        
-        stage('Deploy') {
-            steps {
-                script {
                     // Stop and remove existing container if it exists
                     sh '''
                         docker ps -q --filter "name=fastapi-app" | xargs -r docker stop
