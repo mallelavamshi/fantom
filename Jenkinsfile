@@ -18,10 +18,10 @@ pipeline {
                 script {
                     try {
                         sh '''
-                            python -m pip install --upgrade pip
-                            pip install -r requirements.txt
-                            pip install pytest pytest-cov
-                            python -m pytest tests/
+                            python3 -m pip install --upgrade pip
+                            pip3 install -r requirements.txt
+                            pip3 install pytest pytest-cov
+                            python3 -m pytest tests/
                         '''
                     } catch (Exception e) {
                         echo "Tests failed but continuing deployment"
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     // Build new image
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                     
                     // Stop and remove existing container
                     sh '''
@@ -57,8 +57,7 @@ pipeline {
     
     post {
         always {
-            // Clean up old images
-            sh 'docker image prune -f'
+            sh 'docker image prune -f || true'
         }
     }
 }
